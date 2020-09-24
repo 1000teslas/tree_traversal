@@ -2,9 +2,30 @@
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
-use std::collections::VecDeque;
+use anyhow::Result;
+use std::{
+    collections::VecDeque,
+    io::{self, prelude::*},
+};
 
-pub fn stack_to_queue(s: &[u8]) -> Vec<u8> {
+pub fn run() -> Result<()> {
+    let stdin = io::stdin();
+    let mut t = String::new();
+    stdin.read_line(&mut t)?;
+    let t = t.trim().parse::<usize>()?;
+    for l in stdin
+        .lock()
+        .lines()
+        .take(t)
+        .map(|l| Ok(String::from_utf8(stack_to_queue(&l?.into_bytes()))?))
+        .collect::<Result<Vec<_>>>()?
+    {
+        println!("{}", l);
+    }
+    Ok(())
+}
+
+fn stack_to_queue(s: &[u8]) -> Vec<u8> {
     bf_traverse(parse_stack(s))
 }
 
@@ -12,11 +33,6 @@ pub fn stack_to_queue(s: &[u8]) -> Vec<u8> {
 enum Expr {
     Num(u8),
     Op(u8, Box<Expr>, Box<Expr>),
-}
-
-pub fn debug() {
-    let ss = b"xyPzwIM";
-    dbg!(parse_stack(ss));
 }
 
 fn parse_stack(s: &[u8]) -> Box<Expr> {
